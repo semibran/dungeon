@@ -1,0 +1,25 @@
+{
+  "name": "dungeon",
+  "version": "0.1.0",
+  "description": "Seedable roguelike dungeon generator",
+  "keywords": [
+    "roguelike",
+    "dungeon",
+    "generator"
+  ],
+  "main": "dungeon",
+  "license": "MIT",
+  "author": "Brandon Semilla (https://github.com/semibran)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/semibran/dungeon.git"
+  },
+  "dependencies": {
+    "array": "github:semibran/array#v0.1.0",
+    "cell": "github:semibran/cell#v0.1.0",
+    "directions": "github:semibran/directions#v1.0.0",
+    "grid": "github:semibran/grid#v1.0.0",
+    "random": "github:semibran/random#v1.0.0",
+    "vector2d": "github:semibran/vector2d#v1.0.0"
+  }
+}
