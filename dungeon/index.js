@@ -3,7 +3,7 @@ Dungeon.Dungeon = Dungeon
 
 const { Room, edges } = require('./room')
 const { cells } = require('grid')
-const { adjacent } = require('cell')
+const { steps, adjacent } = require('cell')
 const { remove } = require('array')
 const { int, choose } = require('random')
 const directions = require('directions')
@@ -84,9 +84,12 @@ function Dungeon(width, height) {
 
 		var connections = new Map()
 		var nodes = [...dungeon.rooms, ...dungeon.mazes]
+		for (var node of nodes) {
+			connections.set(node, [])
+		}
+
 		var node = choose(dungeon.rooms)(seed)
 		var stack = [node]
-		connections.set(node, [])
 		remove(nodes, node)
 
 		while (node) {
@@ -120,21 +123,25 @@ function Dungeon(width, height) {
 					for (var direction in directions) {
 						var delta = directions[direction]
 						var edge = add(cell, delta)
-						var target = add(edge, delta)
-						var neighbor = nodes.find(neighbor => {
-							if (dungeon.rooms.includes(neighbor)) {
-								return cells(neighbor).map(cell => add(cell, neighbor)).find(cell => equals(target, cell))
-							} else if (dungeon.mazes.includes(neighbor)) {
-								return neighbor.find(cell => equals(target, cell))
-							}
-						})
-						if (neighbor) {
-							var connectors = neighbors.get(neighbor)
-							if (connectors) {
-								connectors.push(edge)
-							} else {
-								connectors = [edge]
-								neighbors.set(neighbor, connectors)
+						if (!dungeon.doors.find(door => steps(edge, door) <= 1)) {
+							var target = add(edge, delta)
+							var neighbor = [...dungeon.rooms, ...dungeon.mazes].find(neighbor => {
+								if (neighbor !== node && !connections.get(neighbor).includes(node)) {
+									if (dungeon.rooms.includes(neighbor)) {
+										return cells(neighbor).map(cell => add(cell, neighbor)).find(cell => equals(target, cell))
+									} else if (dungeon.mazes.includes(neighbor)) {
+										return neighbor.find(cell => equals(target, cell))
+									}
+								}
+							})
+							if (neighbor) {
+								var connectors = neighbors.get(neighbor)
+								if (connectors) {
+									connectors.push(edge)
+								} else {
+									connectors = [edge]
+									neighbors.set(neighbor, connectors)
+								}
 							}
 						}
 					}
@@ -145,19 +152,19 @@ function Dungeon(width, height) {
 				var connectors = neighbors.get(neighbor)
 				var connector = choose(connectors)(seed)
 				dungeon.doors.push(connector)
-				stack.push(neighbor)
 				connections.get(node).push(neighbor)
-				connections.set(neighbor, [])
+				connections.get(neighbor).push(node)
+				if (nodes.includes(neighbor)) {
+					stack.push(neighbor)
+				}
 				remove(nodes, neighbor)
 				node = neighbor
-				// console.log('travelling through', connector, 'to', neighbor)
 			} else {
 				remove(stack, node)
-				if (!connections.get(node).length && dungeon.mazes.includes(node)) {
+				if (dungeon.mazes.includes(node) && connections.get(node).length === 1) {
 					dungeon.doors.pop()
 				}
 				node = stack[stack.length - 1]
-				// console.log('backtracking to', node)
 			}
 		}
 
